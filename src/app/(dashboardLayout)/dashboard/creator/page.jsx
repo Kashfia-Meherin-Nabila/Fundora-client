@@ -9,6 +9,7 @@ import {
   Eye,
   CircleCheck,
   CircleXmark,
+  CircleXmarkFill,
 } from "@gravity-ui/icons";
 import { authClient } from "@/app/lib/auth-client";
 
@@ -331,7 +332,7 @@ export default function CreatorHome() {
 
         <div className="overflow-x-auto">
 
-          <table className="w-full min-w-[800px] text-left">
+          <table className="w-full min-w-200 text-left">
 
             <thead>
               <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500">
@@ -381,7 +382,7 @@ export default function CreatorHome() {
                       </p>
 
                       <p className="mt-1 text-sm text-slate-500">
-                        You're all caught up!
+                        You are all caught up!
                       </p>
 
                     </div>
@@ -394,7 +395,7 @@ export default function CreatorHome() {
 
                   <tr
                     key={contribution._id}
-                    className="border-b border-white/5 transition hover:bg-white/[0.02]"
+                    className="border-b border-white/5 transition hover:bg-white/2"
                   >
 
                     {/* Supporter */}
@@ -427,7 +428,7 @@ export default function CreatorHome() {
 
                     <td className="px-6 py-4">
 
-                      <p className="max-w-[230px] truncate text-sm text-slate-300">
+                      <p className="max-w-57.5 truncate text-sm text-slate-300">
                         {contribution.campaign_title}
                       </p>
 
@@ -510,7 +511,7 @@ export default function CreatorHome() {
                           }
                           className="flex items-center gap-1.5 rounded-lg bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                          <CircleX
+                          <CircleXmarkFill
                             width={15}
                             height={15}
                           />
@@ -543,7 +544,7 @@ export default function CreatorHome() {
       {selectedContribution && (
 
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-100 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
           onClick={() => setSelectedContribution(null)}
         >
 
