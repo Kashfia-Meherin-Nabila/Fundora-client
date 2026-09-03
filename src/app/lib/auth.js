@@ -19,6 +19,24 @@ export const auth = betterAuth({
     emailAndPassword: { 
     enabled: true, 
   },
+ user: {
+  additionalFields: {
+    role: {
+      type: "string",
+      defaultValue: "Supporter",
+    },
+
+    credits: {
+      type: "number",
+      defaultValue: 0,
+    },
+
+    isBlocked: {
+      type: "boolean",
+      defaultValue: false,
+    },
+  },
+},
   database: mongodbAdapter(db, {
     // Optional: if you don't provide a client, database transactions won't be enabled.
     client

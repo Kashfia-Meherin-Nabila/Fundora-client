@@ -1,7 +1,5 @@
-
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import {
@@ -9,33 +7,71 @@ import {
   CircleDollar,
   Eye,
   EyeSlash,
-  
   Lock,
-  
   Sparkles,
 } from "@gravity-ui/icons";
 import { authClient } from "@/app/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const router = useRouter();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Authentication will be connected later
-    console.log("Login submitted");
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const email = formData.get("email");
+    const password = formData.get("password");
+
+    setLoading(true);
+
+    try {
+      const { data, error } = await authClient.signIn.email({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error("Better Auth login error:", error);
+        alert(error.message || "Sign in failed.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Login successful:", data);
+
+      // Get role safely from the returned user object
+      const role = data?.user?.role;
+
+      if (role === "creator") {
+        router.push("/dashboard/creator");
+      } else {
+        router.push("/dashboard/supporter");
+      }
+    } catch (error) {
+      console.error("Login failed:", error);
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
-  try {
-    await authClient.signIn.social({
-      provider: "google",
-      callbackURL: "/dashboard",
-    });
-  } catch (error) {
-    console.error("Google login failed:", error);
-  }
-};
+    try {
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+    } catch (error) {
+      console.error("Google login failed:", error);
+      alert("Google login failed.");
+    }
+  };
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-10">
@@ -149,7 +185,6 @@ export default function LoginForm() {
               onClick={handleGoogleLogin}
               className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white transition hover:border-violet-500/50 hover:bg-white/10"
             >
-              {/* <LogoGoogle width={19} height={19} /> */}
               Continue with Google
             </button>
 
@@ -175,19 +210,13 @@ export default function LoginForm() {
                 </label>
 
                 <div className="relative">
-                  {/* <Mail
-                    width={18}
-                    height={18}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-                  /> */}
-
                   <input
                     id="email"
                     name="email"
                     type="email"
                     placeholder="you@example.com"
                     required
-                    className="w-full rounded-xl border border-white/10 bg-slate-950 py-3.5 pl-11 pr-4 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
+                    className="w-full rounded-xl border border-white/10 bg-slate-950 py-3.5 px-4 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-violet-500 focus:ring-2 focus:ring-violet-500/20"
                   />
                 </div>
               </div>
@@ -246,14 +275,18 @@ export default function LoginForm() {
               {/* Submit */}
               <button
                 type="submit"
-                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-900/20 transition hover:from-violet-500 hover:to-purple-500"
+                disabled={loading}
+                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-900/20 transition hover:from-violet-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Sign in
-                <ArrowRight
-                  width={18}
-                  height={18}
-                  className="transition-transform group-hover:translate-x-1"
-                />
+                {loading ? "Signing in..." : "Sign in"}
+
+                {!loading && (
+                  <ArrowRight
+                    width={18}
+                    height={18}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                )}
               </button>
             </form>
 
@@ -274,4 +307,3 @@ export default function LoginForm() {
     </main>
   );
 }
-

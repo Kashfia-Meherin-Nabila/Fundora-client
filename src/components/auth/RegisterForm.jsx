@@ -7,35 +7,95 @@ import {
   ArrowRight,
   CircleDollar,
   Eye,
-  EyeSlash,  
-  Lock,  
+  EyeSlash,
+  Lock,
   Person,
   Picture,
   Sparkles,
 } from "@gravity-ui/icons";
 import { authClient } from "@/app/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("Supporter");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const router = useRouter();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Registration will be connected to backend later
-    console.log("Register submitted");
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    const name = formData.get("name");
+    const email = formData.get("email");
+    const photo = formData.get("photo");
+    const password = formData.get("password");
+
+    // Correct starting credits
+    const credits = role === "Supporter" ? 50 : 20;
+
+    setLoading(true);
+
+    try {
+      // Create account with Better Auth
+      const { data, error } = await authClient.signUp.email({
+        name,
+        email,
+        password,
+        image: photo,
+
+        // Additional fields
+        role,
+        credits,
+
+        callbackURL:
+          role === "Creator"
+            ? "/dashboard/creator"
+            : "/dashboard/supporter",
+      });
+
+      if (error) {
+        console.error("Better Auth registration error:", error);
+
+        alert(error.message || "Registration failed.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Registration successful:", data);
+
+      // Redirect according to role
+      if (role === "Creator") {
+        router.push("/dashboard/creator");
+      } else {
+        router.push("/dashboard/supporter");
+      }
+    } catch (error) {
+      console.error("Registration failed:", error);
+
+      alert("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleRegister = async () => {
-  try {
-    await authClient.signIn.social({
-      provider: "google",
-      callbackURL: "/dashboard",
-    });
-  } catch (error) {
-    console.error("Google registration failed:", error);
-  }
-};
+    try {
+      // Google OAuth does not submit the role from this form.
+      // Better Auth will use the default role/credits configured
+      // in auth.js unless you add a separate role-selection flow.
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL:"/"
+      });
+    } catch (error) {
+      console.error("Google registration failed:", error);
+      alert("Google registration failed.");
+    }
+  };
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-10">
@@ -94,6 +154,7 @@ export default function RegisterForm() {
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/15">
                     <span className="h-2 w-2 rounded-full bg-violet-200" />
                   </div>
+
                   {item}
                 </div>
               ))}
@@ -149,7 +210,6 @@ export default function RegisterForm() {
               onClick={handleGoogleRegister}
               className="flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white transition hover:border-violet-500/50 hover:bg-white/10"
             >
-              {/* <LogoGoogle width={19} height={19} /> */}
               Continue with Google
             </button>
 
@@ -203,12 +263,6 @@ export default function RegisterForm() {
                 </label>
 
                 <div className="relative">
-                  {/* <Mail
-                    width={18}
-                    height={18}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
-                  /> */}
-
                   <input
                     id="email"
                     name="email"
@@ -321,14 +375,18 @@ export default function RegisterForm() {
               {/* Submit */}
               <button
                 type="submit"
-                className="group mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-900/20 transition hover:from-violet-500 hover:to-purple-500"
+                disabled={loading}
+                className="group mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-900/20 transition hover:from-violet-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Create account
-                <ArrowRight
-                  width={18}
-                  height={18}
-                  className="transition-transform group-hover:translate-x-1"
-                />
+                {loading ? "Creating account..." : "Create account"}
+
+                {!loading && (
+                  <ArrowRight
+                    width={18}
+                    height={18}
+                    className="transition-transform group-hover:translate-x-1"
+                  />
+                )}
               </button>
             </form>
 

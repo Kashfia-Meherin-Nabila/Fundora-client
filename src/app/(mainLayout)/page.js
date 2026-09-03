@@ -7,14 +7,11 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-   <div>
-    <HeroSection/>
-    <HowItWorks />
-
+    <div>
+      <HeroSection />
+      <HowItWorks />
       <ExploreCategories />
-
       <PlatformImpact />
-
       <TestimonialSection />
     </div>
   );
