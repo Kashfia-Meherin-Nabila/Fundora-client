@@ -1,13 +1,15 @@
-import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
-import React from 'react';
+// import DashboardSidebar from "@/components/DashboardSidebar";
 
-const DashboardLayout = ({children}) => {
-    return (
-        <div>
-            <DashboardSidebar/>
-            <div>{children}</div>
-        </div>
-    );
-};
+import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 
-export default DashboardLayout;
+export default function DashboardLayout({ children }) {
+  return (
+    <div className="min-h-screen bg-slate-950">
+      <DashboardSidebar />
+
+      <main className="ml-72 min-h-screen w-[calc(100%-18rem)]">
+        {children}
+      </main>
+    </div>
+  );
+}
