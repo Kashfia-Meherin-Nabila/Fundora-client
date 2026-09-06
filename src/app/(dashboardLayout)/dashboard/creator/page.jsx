@@ -38,36 +38,82 @@ export default function CreatorHome() {
   // =========================
 
   useEffect(() => {
-    if (!email) return;
+  if (isPending || !email) return;
 
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
 
-        const [statsResponse, contributionResponse] = await Promise.all([
-          fetch(`${API_URL}/api/creator/stats/${email}`),
-          fetch(`${API_URL}/api/creator/pending-contributions/${email}`),
-        ]);
+      const [statsResponse, contributionResponse] = await Promise.all([
+        fetch(
+          `${API_URL}/api/creator/stats/${encodeURIComponent(email)}`
+        ),
+        fetch(
+          `${API_URL}/api/creator/pending-contributions/${encodeURIComponent(
+            email
+          )}`
+        ),
+      ]);
 
-        const statsData = await statsResponse.json();
-        const contributionData = await contributionResponse.json();
-
-        if (statsResponse.ok) {
-          setStats(statsData);
-        }
-
-        if (contributionResponse.ok) {
-          setContributions(contributionData);
-        }
-      } catch (error) {
-        console.error("Failed to load creator dashboard:", error);
-      } finally {
-        setLoading(false);
+      // Check responses BEFORE json()
+      if (!statsResponse.ok) {
+        const errorText = await statsResponse.text();
+        console.error(
+          "Stats API error:",
+          statsResponse.status,
+          errorText
+        );
+        throw new Error(
+          `Stats API failed with status ${statsResponse.status}`
+        );
       }
-    };
 
-    fetchDashboardData();
-  }, [email]);
+      if (!contributionResponse.ok) {
+        const errorText = await contributionResponse.text();
+        console.error(
+          "Contribution API error:",
+          contributionResponse.status,
+          errorText
+        );
+        throw new Error(
+          `Contribution API failed with status ${contributionResponse.status}`
+        );
+      }
+
+      const statsData = await statsResponse.json();
+      const contributionData = await contributionResponse.json();
+
+      setStats({
+        totalCampaigns: Number(statsData.totalCampaigns || 0),
+        activeCampaigns: Number(statsData.activeCampaigns || 0),
+        totalRaised: Number(statsData.totalRaised || 0),
+      });
+
+      setContributions(
+        Array.isArray(contributionData)
+          ? contributionData
+          : []
+      );
+    } catch (error) {
+      console.error(
+        "Failed to load creator dashboard:",
+        error
+      );
+
+      setStats({
+        totalCampaigns: 0,
+        activeCampaigns: 0,
+        totalRaised: 0,
+      });
+
+      setContributions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchDashboardData();
+}, [email, isPending]);
 
   // =========================
   // Approve Contribution

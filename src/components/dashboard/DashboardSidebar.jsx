@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -11,41 +10,34 @@ import {
   CreditCard,
   Wallet,
   Person,
-  FileText,
   ChartBar,
   Plus,
   Folder,
   Bell,
 } from "@gravity-ui/icons";
 import { authClient } from "@/app/lib/auth-client";
-
-// import { authClient } from "@/app/lib/auth-client";
+import Image from "next/image";
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
 
   const { data: session, isPending } = authClient.useSession();
 
-   const user = session?.user;
+  const user = session?.user;
 
   const name = user?.name || "User";
   const image = user?.image || "";
   const role = user?.role || "Supporter";
-//   const credits = user?.credits ?? 0;
-
-
+  //   const credits = user?.credits ?? 0;
 
   // Read actual credits from database/session
-  const credits =
-    typeof user?.credits === "number"
-      ? user.credits
-      : 0;
+  const credits = typeof user?.credits === "number" ? user.credits : 0;
 
-  console.log("SESSION:", session);
-  console.log("USER:", user);
-  console.log("NAME:", name);
-  console.log("ROLE:", role);
-  console.log("CREDITS:", credits);
+  // console.log("SESSION:", session);
+  // console.log("USER:", user);
+  // console.log("NAME:", name);
+  // console.log("ROLE:", role);
+  // console.log("CREDITS:", credits);
 
   const supporterNavigation = [
     {
@@ -145,9 +137,7 @@ export default function DashboardSidebar() {
     return (
       <aside className="fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-white/10 bg-slate-950">
         <div className="flex h-full items-center justify-center">
-          <p className="text-sm text-slate-500">
-            Loading...
-          </p>
+          <p className="text-sm text-slate-500">Loading...</p>
         </div>
       </aside>
     );
@@ -155,11 +145,11 @@ export default function DashboardSidebar() {
 
   return (
     <aside className="fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-white/10 bg-slate-950">
-
       {/* Logo */}
       <div className="border-b border-white/10 p-6">
         <Link
-          href={"/"
+          href={
+            "/"
             // role === "Creator"
             //   ? "/dashboard/creator"
             //   : role === "Admin"
@@ -169,31 +159,24 @@ export default function DashboardSidebar() {
           className="flex items-center gap-3"
         >
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-purple-600">
-            <CircleDollar
-              width={22}
-              height={22}
-              className="text-white"
-            />
+            <CircleDollar width={22} height={22} className="text-white" />
           </div>
 
-          <span className="text-xl font-bold text-white">
-            Fundora
-          </span>
+          <span className="text-xl font-bold text-white">Fundora</span>
         </Link>
       </div>
 
       {/* User Information */}
       <div className="border-b border-white/10 p-5">
-
         <div className="flex items-center gap-3">
-
           {/* User Image */}
           <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-violet-500/40 bg-slate-800">
-
             {image ? (
-              <img
+              <Image
                 src={image}
                 alt={name}
+                width={500}
+                height={500}
                 className="h-full w-full object-cover"
               />
             ) : (
@@ -201,39 +184,25 @@ export default function DashboardSidebar() {
                 {name.charAt(0).toUpperCase()}
               </div>
             )}
-
           </div>
 
           {/* Name + Role */}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-white">
-              {name}
-            </p>
+            <p className="truncate text-sm font-semibold text-white">{name}</p>
 
-            <p className="text-xs text-slate-500">
-              {role}
-            </p>
+            <p className="text-xs text-slate-500">{role}</p>
           </div>
         </div>
 
         {/* Credits */}
         <div className="mt-4 flex items-center justify-between rounded-xl border border-white/10 bg-slate-900 px-4 py-3">
-
           <div className="flex items-center gap-2">
-            <CircleDollar
-              width={17}
-              height={17}
-              className="text-violet-400"
-            />
+            <CircleDollar width={17} height={17} className="text-violet-400" />
 
-            <span className="text-xs text-slate-400">
-              Available Credits
-            </span>
+            <span className="text-xs text-slate-400">Available Credits</span>
           </div>
 
-          <span className="font-bold text-white">
-            {credits}
-          </span>
+          <span className="font-bold text-white">{credits}</span>
         </div>
       </div>
 
@@ -243,13 +212,8 @@ export default function DashboardSidebar() {
           type="button"
           className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
         >
-          <Bell
-            width={18}
-            height={18}
-          />
-
+          <Bell width={18} height={18} />
           Notifications
-
           <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-violet-600 px-1 text-[10px] font-bold text-white">
             0
           </span>
@@ -258,19 +222,16 @@ export default function DashboardSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-4 py-5">
-
         <p className="mb-3 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-600">
           Navigation
         </p>
 
         <div className="space-y-1">
-
           {navigation.map((item) => {
             const Icon = item.icon;
 
             const isActive =
-              pathname === item.href ||
-              pathname.startsWith(`${item.href}/`);
+              pathname === item.href || pathname.startsWith(`${item.href}/`);
 
             return (
               <Link
@@ -282,33 +243,23 @@ export default function DashboardSidebar() {
                     : "text-slate-400 hover:bg-white/5 hover:text-white"
                 }`}
               >
-                <Icon
-                  width={18}
-                  height={18}
-                />
+                <Icon width={18} height={18} />
 
                 <span>{item.name}</span>
               </Link>
             );
           })}
-
         </div>
       </nav>
 
       {/* Footer */}
       <div className="border-t border-white/10 p-5">
-
-        <p className="text-center text-xs text-slate-600">
-          © 2026 Fundora
-        </p>
+        <p className="text-center text-xs text-slate-600">© 2026 Fundora</p>
 
         <p className="mt-1 text-center text-[10px] text-slate-700">
           Turn ideas into impact.
         </p>
-
       </div>
-
     </aside>
   );
 }
-
