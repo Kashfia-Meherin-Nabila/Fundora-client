@@ -47,7 +47,7 @@ export default function DashboardSidebar() {
     },
     {
       name: "Explore Campaigns",
-      href: "/dashboard/supporter/explore-campaigns",
+      href: "/campaigns",
       icon: Compass,
     },
     {
