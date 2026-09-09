@@ -27,7 +27,7 @@ export default function Navbar() {
     name: session?.user?.name || "Fundora User",
     image: session?.user?.image || "/avatar-placeholder.png",
     role: session?.user?.role || "Supporter",
-    credits: 50,
+    credits: session?.user?.credits,
   };
 
   const getDashboardRoute = () => {
