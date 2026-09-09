@@ -13,6 +13,7 @@
     "@gravity-ui/icons": "^2.22.0",
     "@heroui/react": "^3.2.4",
     "@heroui/styles": "^3.2.4",
+    "@stripe/stripe-js": "^9.15.0",
     "axios": "^1.20.0",
     "better-auth": "^1.7.2",
     "framer-motion": "^13.1.1",
@@ -23,6 +24,7 @@
     "react-dom": "19.2.8",
     "react-hook-form": "^7.87.0",
     "react-hot-toast": "^2.6.0",
+    "stripe": "^22.6.1",
     "sweetalert2": "^11.26.25",
     "swiper": "^14.2.0"
   },
