@@ -108,12 +108,12 @@ export default function DashboardSidebar() {
     },
     {
       name: "Manage Campaigns",
-      href: "/dashboard/admin/campaigns",
+      href: "/dashboard/admin/campaign-approvals",
       icon: Folder,
     },
     {
       name: "Withdrawal Requests",
-      href: "/dashboard/admin/withdrawals",
+      href: "/dashboard/admin/withdrawals-request",
       icon: Wallet,
     },
     {
