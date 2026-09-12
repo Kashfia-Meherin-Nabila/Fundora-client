@@ -17,6 +17,8 @@ export default function CampaignApprovalsPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
+  // ==================== LOAD PENDING CAMPAIGNS ====================
+
   useEffect(() => {
     let cancelled = false;
 

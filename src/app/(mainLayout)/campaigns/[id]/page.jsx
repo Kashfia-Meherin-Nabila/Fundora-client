@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-// import { authClient } from "@/lib/auth-client";
 
 import {
   ArrowLeft,
@@ -16,6 +15,7 @@ import {
   Tag,
   CrownDiamond,
   Wallet,
+  TriangleExclamation,
 } from "@gravity-ui/icons";
 
 import Swal from "sweetalert2";
@@ -33,12 +33,18 @@ export default function CampaignDetailsPage() {
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [reporting, setReporting] = useState(false);
   const [error, setError] = useState("");
 
   const supporter = session?.user;
 
+  // =========================================
+  // FETCH CAMPAIGN
+  // =========================================
   useEffect(() => {
     if (!campaignId) return;
+
+    let cancelled = false;
 
     const fetchCampaign = async () => {
       try {
@@ -46,27 +52,48 @@ export default function CampaignDetailsPage() {
         setError("");
 
         const response = await fetch(
-          `${API_URL}/api/campaigns/${campaignId}`
+          `${API_URL}/api/campaigns/${campaignId}`,
+          {
+            cache: "no-store",
+          }
         );
 
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || "Failed to load campaign.");
+          throw new Error(
+            data.message || "Failed to load campaign."
+          );
         }
 
-        setCampaign(data);
+        if (!cancelled) {
+          setCampaign(data);
+        }
       } catch (error) {
         console.error(error);
-        setError(error.message || "Failed to load campaign.");
+
+        if (!cancelled) {
+          setError(
+            error.message || "Failed to load campaign."
+          );
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     fetchCampaign();
+
+    return () => {
+      cancelled = true;
+    };
   }, [campaignId]);
 
+  // =========================================
+  // CONTRIBUTION
+  // =========================================
   const handleContribution = async (e) => {
     e.preventDefault();
 
@@ -117,21 +144,24 @@ export default function CampaignDetailsPage() {
     setError("");
 
     try {
-      const response = await fetch(`${API_URL}/api/contributions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          campaign_id: campaign._id,
-          campaign_title: campaign.campaign_title,
-          Contribution_amount: contributionAmount,
-          Supporter_email: supporter.email,
-          Supporter_name: supporter.name,
-          creator_name: campaign.creator_name,
-          creator_email: campaign.creator_email,
-        }),
-      });
+      const response = await fetch(
+        `${API_URL}/api/contributions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            campaign_id: campaign._id,
+            campaign_title: campaign.campaign_title,
+            Contribution_amount: contributionAmount,
+            Supporter_email: supporter.email,
+            Supporter_name: supporter.name,
+            creator_name: campaign.creator_name,
+            creator_email: campaign.creator_email,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -140,6 +170,14 @@ export default function CampaignDetailsPage() {
           data.message || "Failed to submit contribution."
         );
       }
+
+      // Update raised amount immediately
+      setCampaign((prev) => ({
+        ...prev,
+        raised_amount:
+          Number(prev.raised_amount || 0) +
+          contributionAmount,
+      }));
 
       setAmount("");
 
@@ -153,12 +191,133 @@ export default function CampaignDetailsPage() {
       });
     } catch (error) {
       console.error(error);
-      setError(error.message || "Something went wrong.");
+
+      setError(
+        error.message || "Something went wrong."
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
+  // =========================================
+  // REPORT CAMPAIGN
+  // =========================================
+  const handleReportCampaign = async () => {
+    if (!supporter) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Login Required",
+        text: "Please login as a Supporter to report a campaign.",
+        background: "#0f172a",
+        color: "#fff",
+        confirmButtonColor: "#8b5cf6",
+      });
+
+      return;
+    }
+
+    if (supporter.role !== "Supporter") {
+      await Swal.fire({
+        icon: "error",
+        title: "Supporters Only",
+        text: "Only Supporters can report campaigns.",
+        background: "#0f172a",
+        color: "#fff",
+        confirmButtonColor: "#8b5cf6",
+      });
+
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: "Report Campaign",
+      text: "Why do you think this campaign is suspicious or fraudulent?",
+      input: "textarea",
+      inputPlaceholder:
+        "Please describe the reason for reporting this campaign...",
+      inputAttributes: {
+        "aria-label": "Report reason",
+      },
+      showCancelButton: true,
+      confirmButtonText: "Submit Report",
+      cancelButtonText: "Cancel",
+      background: "#0f172a",
+      color: "#fff",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#475569",
+      inputValidator: (value) => {
+        if (!value || !value.trim()) {
+          return "Please provide a reason for reporting.";
+        }
+
+        if (value.trim().length < 10) {
+          return "Please provide at least 10 characters.";
+        }
+
+        return null;
+      },
+    });
+
+    if (!result.isConfirmed) return;
+
+    setReporting(true);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/reports`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            campaign_id: campaign._id,
+            campaign_title: campaign.campaign_title,
+            reporter_name: supporter.name,
+            reporter_email: supporter.email,
+            reason: result.value.trim(),
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Failed to submit report."
+        );
+      }
+
+      await Swal.fire({
+        icon: "success",
+        title: "Report Submitted",
+        text: "Thank you. The Admin will review this campaign.",
+        background: "#0f172a",
+        color: "#fff",
+        confirmButtonColor: "#8b5cf6",
+      });
+    } catch (error) {
+      console.error("Report campaign error:", error);
+
+      await Swal.fire({
+        icon: "error",
+        title: "Report Failed",
+        text:
+          error.message ||
+          "Unable to submit your report.",
+        background: "#0f172a",
+        color: "#fff",
+        confirmButtonColor: "#8b5cf6",
+      });
+    } finally {
+      setReporting(false);
+    }
+  };
+
+  // =========================================
+  // LOADING
+  // =========================================
   if (loading) {
     return (
       <main className="min-h-screen bg-slate-950 px-6 py-10">
@@ -167,6 +326,7 @@ export default function CampaignDetailsPage() {
 
           <div className="mt-8 grid gap-8 lg:grid-cols-3">
             <div className="h-[500px] rounded-3xl bg-slate-900 lg:col-span-2" />
+
             <div className="h-[500px] rounded-3xl bg-slate-900" />
           </div>
         </div>
@@ -174,6 +334,9 @@ export default function CampaignDetailsPage() {
     );
   }
 
+  // =========================================
+  // ERROR
+  // =========================================
   if (error && !campaign) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-950 px-6">
@@ -190,7 +353,9 @@ export default function CampaignDetailsPage() {
             Campaign Not Found
           </h1>
 
-          <p className="mt-2 text-slate-400">{error}</p>
+          <p className="mt-2 text-slate-400">
+            {error}
+          </p>
 
           <Link
             href="/campaigns"
@@ -204,21 +369,35 @@ export default function CampaignDetailsPage() {
     );
   }
 
-  const fundingGoal = Number(campaign.funding_goal || 0);
-  const raisedAmount = Number(campaign.raised_amount || 0);
+  // =========================================
+  // CAMPAIGN DATA
+  // =========================================
+  const fundingGoal = Number(
+    campaign.funding_goal || 0
+  );
+
+  const raisedAmount = Number(
+    campaign.raised_amount || 0
+  );
 
   const progress =
     fundingGoal > 0
-      ? Math.min((raisedAmount / fundingGoal) * 100, 100)
+      ? Math.min(
+          (raisedAmount / fundingGoal) * 100,
+          100
+        )
       : 0;
 
   const deadline = new Date(campaign.deadline);
+
   const isExpired = deadline <= new Date();
 
   return (
     <main className="min-h-screen bg-slate-950 px-4 py-8 text-white sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        {/* Back */}
+        {/* =================================
+            BACK
+        ================================= */}
         <Link
           href="/campaigns"
           className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white"
@@ -228,13 +407,18 @@ export default function CampaignDetailsPage() {
         </Link>
 
         <div className="grid gap-8 lg:grid-cols-3">
-          {/* LEFT */}
+          {/* =================================
+              LEFT
+          ================================= */}
           <section className="lg:col-span-2">
             {/* Image */}
             <div className="relative h-[320px] overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 sm:h-[430px]">
               <Image
                 src={campaign.campaign_image_url}
-                alt={campaign.campaign_title}
+                alt={
+                  campaign.campaign_title ||
+                  "Campaign"
+                }
                 fill
                 priority
                 className="object-cover"
@@ -250,19 +434,21 @@ export default function CampaignDetailsPage() {
               </div>
             </div>
 
-            {/* Main information */}
+            {/* Main Information */}
             <div className="mt-8">
               <h1 className="text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
                 {campaign.campaign_title}
               </h1>
 
               <div className="mt-5 flex flex-wrap gap-5 text-sm text-slate-400">
+                {/* Creator */}
                 <div className="flex items-center gap-2">
                   <Person
                     width={18}
                     height={18}
                     className="text-violet-400"
                   />
+
                   <span>
                     Created by{" "}
                     <strong className="text-slate-200">
@@ -271,26 +457,51 @@ export default function CampaignDetailsPage() {
                   </span>
                 </div>
 
+                {/* Category */}
                 <div className="flex items-center gap-2">
                   <Tag
                     width={18}
                     height={18}
                     className="text-pink-400"
                   />
+
                   <span>{campaign.category}</span>
                 </div>
 
+                {/* Deadline */}
                 <div className="flex items-center gap-2">
                   <Calendar
                     width={18}
                     height={18}
                     className="text-emerald-400"
                   />
+
                   <span>
                     Deadline:{" "}
                     {deadline.toLocaleDateString()}
                   </span>
                 </div>
+              </div>
+
+              {/* =================================
+                  REPORT CAMPAIGN
+              ================================= */}
+              <div className="mt-6">
+                <button
+                  type="button"
+                  onClick={handleReportCampaign}
+                  disabled={reporting}
+                  className="inline-flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-2.5 text-sm font-medium text-red-400 transition hover:border-red-500/30 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <TriangleExclamation
+                    width={17}
+                    height={17}
+                  />
+
+                  {reporting
+                    ? "Submitting Report..."
+                    : "Report Campaign"}
+                </button>
               </div>
 
               {/* Story */}
@@ -327,7 +538,9 @@ export default function CampaignDetailsPage() {
             </div>
           </section>
 
-          {/* RIGHT */}
+          {/* =================================
+              RIGHT
+          ================================= */}
           <aside>
             <div className="sticky top-6 rounded-3xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl backdrop-blur-xl">
               {/* Funding */}
@@ -422,7 +635,9 @@ export default function CampaignDetailsPage() {
                 </div>
               </div>
 
-              {/* Contribution */}
+              {/* =================================
+                  CONTRIBUTION
+              ================================= */}
               <div className="mt-8 border-t border-slate-800 pt-7">
                 <div className="flex items-center gap-2">
                   <Wallet
@@ -439,8 +654,8 @@ export default function CampaignDetailsPage() {
                 {!supporter ? (
                   <div className="mt-5 rounded-2xl border border-violet-500/20 bg-violet-500/5 p-5">
                     <p className="text-sm leading-6 text-slate-400">
-                      Login as a Supporter to contribute to
-                      this campaign.
+                      Login as a Supporter to contribute
+                      to this campaign.
                     </p>
 
                     <Link
@@ -484,8 +699,8 @@ export default function CampaignDetailsPage() {
                     </div>
 
                     <p className="mt-2 text-xs text-slate-500">
-                      Your available credits will be checked
-                      when you submit.
+                      Your available credits will be
+                      checked when you submit.
                     </p>
 
                     {error && (
@@ -496,7 +711,9 @@ export default function CampaignDetailsPage() {
 
                     <button
                       type="submit"
-                      disabled={submitting || isExpired}
+                      disabled={
+                        submitting || isExpired
+                      }
                       className="mt-5 w-full rounded-xl bg-gradient-to-r from-violet-600 to-pink-600 px-5 py-3.5 font-bold text-white shadow-lg shadow-violet-900/20 transition hover:from-violet-500 hover:to-pink-500 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {submitting
@@ -507,8 +724,8 @@ export default function CampaignDetailsPage() {
                     </button>
 
                     <p className="mt-3 text-center text-xs text-slate-600">
-                      Contribution will remain pending until
-                      the Creator approves it.
+                      Contribution will remain pending
+                      until the Creator approves it.
                     </p>
                   </form>
                 )}

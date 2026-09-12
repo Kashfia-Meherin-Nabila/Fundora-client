@@ -107,8 +107,13 @@ export default function DashboardSidebar() {
       icon: Person,
     },
     {
-      name: "Manage Campaigns",
+      name: "Campaigns",
       href: "/dashboard/admin/campaign-approvals",
+      icon: Folder,
+    },
+    {
+      name: "Manage Campaigns",
+      href: "/dashboard/admin/manage-campaigns",
       icon: Folder,
     },
     {
