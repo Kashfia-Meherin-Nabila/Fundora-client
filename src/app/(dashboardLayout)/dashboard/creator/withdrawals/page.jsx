@@ -13,15 +13,35 @@ import toast from "react-hot-toast";
 const API_URL = "http://localhost:5000";
 
 export default function WithdrawalsPage() {
-  const { data: session, isPending: sessionLoading } = useSession();
+  const {
+    data: session,
+    isPending: sessionLoading,
+  } = useSession();
 
   const [user, setUser] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  const [creditsToWithdraw, setCreditsToWithdraw] = useState("");
-  const [paymentSystem, setPaymentSystem] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
+  // ===============================
+  // FORM STATES
+  // ===============================
+
+  const [creditsToWithdraw, setCreditsToWithdraw] =
+    useState("");
+
+  const [paymentSystem, setPaymentSystem] =
+    useState("");
+
+  const [accountNumber, setAccountNumber] =
+    useState("");
+
+  // ===============================
+  // RAISED CREDITS
+  // ===============================
+
+  const [raisedCredits, setRaisedCredits] =
+    useState(0);
 
   // ===============================
   // GET CREATOR
@@ -41,15 +61,23 @@ export default function WithdrawalsPage() {
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch user");
+          throw new Error(
+            "Failed to fetch user"
+          );
         }
 
         const data = await response.json();
 
         setUser(data.user);
       } catch (error) {
-        console.error("User fetch error:", error);
-        toast.error("Failed to load creator information");
+        console.error(
+          "User fetch error:",
+          error
+        );
+
+        toast.error(
+          "Failed to load creator information"
+        );
       } finally {
         setLoading(false);
       }
@@ -59,19 +87,66 @@ export default function WithdrawalsPage() {
   }, [session?.user?.email]);
 
   // ===============================
+  // GET RAISED CREDITS
+  // ===============================
+
+  useEffect(() => {
+    if (!session?.user?.email) return;
+
+    const fetchRaisedCredits = async () => {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/creator/raised-credits/${encodeURIComponent(
+            session.user.email
+          )}`
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            "Failed to fetch raised credits"
+          );
+        }
+
+        const data = await response.json();
+
+        setRaisedCredits(
+          Number(data.totalRaisedCredits) || 0
+        );
+      } catch (error) {
+        console.error(
+          "Raised credits fetch error:",
+          error
+        );
+
+        toast.error(
+          "Failed to load raised credits"
+        );
+
+        setRaisedCredits(0);
+      }
+    };
+
+    fetchRaisedCredits();
+  }, [session?.user?.email]);
+
+  // ===============================
   // VALUES
   // ===============================
 
-  const totalCredits = Number(user?.credits) || 0;
+  const totalCredits =
+    Number(raisedCredits) || 0;
 
-  const withdrawCredits = Number(creditsToWithdraw) || 0;
+  const withdrawCredits =
+    Number(creditsToWithdraw) || 0;
 
-  // 20 Credits = $1
-  const withdrawAmount = withdrawCredits / 20;
+  // 20 credits = $1
+  const withdrawAmount =
+    withdrawCredits / 20;
 
   const minimumCredits = 200;
 
-  const canWithdraw = totalCredits >= minimumCredits;
+  const canWithdraw =
+    totalCredits >= minimumCredits;
 
   const validAmount =
     withdrawCredits >= minimumCredits &&
@@ -86,8 +161,17 @@ export default function WithdrawalsPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!user) {
+      toast.error(
+        "Creator information not available."
+      );
+      return;
+    }
+
     if (!canWithdraw) {
-      toast.error("You need at least 200 credits to withdraw.");
+      toast.error(
+        "You need at least 200 credits to withdraw."
+      );
       return;
     }
 
@@ -99,37 +183,59 @@ export default function WithdrawalsPage() {
     }
 
     if (!paymentSystem) {
-      toast.error("Please select a payment system.");
+      toast.error(
+        "Please select a payment system."
+      );
       return;
     }
 
     if (!accountNumber.trim()) {
-      toast.error("Please enter your account number.");
+      toast.error(
+        "Please enter your account number."
+      );
       return;
     }
 
     try {
       setSubmitting(true);
 
+      // ===============================
+      // WITHDRAWAL DATA
+      // ===============================
+
       const withdrawalData = {
         creator_email: user.email,
         creator_name: user.name,
-        withdrawal_credit: withdrawCredits,
-        withdrawal_amount: withdrawAmount,
-        payment_system: paymentSystem,
-        account_number: accountNumber,
+
+        withdrawal_credit:
+          withdrawCredits,
+
+        payment_system:
+          paymentSystem,
+
+        account_number:
+          accountNumber.trim(),
+
         withdraw_date: new Date(),
-        status: "pending",
       };
+
+      // ===============================
+      // SEND REQUEST
+      // ===============================
 
       const response = await fetch(
         `${API_URL}/api/withdrawals`,
         {
           method: "POST",
+
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type":
+              "application/json",
           },
-          body: JSON.stringify(withdrawalData),
+
+          body: JSON.stringify(
+            withdrawalData
+          ),
         }
       );
 
@@ -137,34 +243,57 @@ export default function WithdrawalsPage() {
 
       if (!response.ok) {
         throw new Error(
-          data.message || "Withdrawal request failed."
+          data.message ||
+            "Withdrawal request failed."
         );
       }
+
+      // ===============================
+      // SUCCESS
+      // ===============================
 
       toast.success(
         "Withdrawal request submitted successfully!"
       );
 
+      // ===============================
+      // RESET FORM
+      // ===============================
+
       setCreditsToWithdraw("");
       setPaymentSystem("");
       setAccountNumber("");
 
-      // Refresh creator information
-      const userResponse = await fetch(
-        `${API_URL}/api/users/${encodeURIComponent(
-          user.email
-        )}`
-      );
+      // ===============================
+      // REFRESH RAISED CREDITS
+      // ===============================
 
-      if (userResponse.ok) {
-        const userData = await userResponse.json();
-        setUser(userData.user);
+      const raisedResponse =
+        await fetch(
+          `${API_URL}/api/creator/raised-credits/${encodeURIComponent(
+            user.email
+          )}`
+        );
+
+      if (raisedResponse.ok) {
+        const raisedData =
+          await raisedResponse.json();
+
+        setRaisedCredits(
+          Number(
+            raisedData.totalRaisedCredits
+          ) || 0
+        );
       }
     } catch (error) {
-      console.error("Withdrawal error:", error);
+      console.error(
+        "Withdrawal error:",
+        error
+      );
 
       toast.error(
-        error.message || "Failed to submit withdrawal."
+        error.message ||
+          "Failed to submit withdrawal."
       );
     } finally {
       setSubmitting(false);
@@ -175,7 +304,10 @@ export default function WithdrawalsPage() {
   // LOADING
   // ===============================
 
-  if (sessionLoading || loading) {
+  if (
+    sessionLoading ||
+    loading
+  ) {
     return (
       <div className="min-h-screen bg-slate-950 p-6">
         <div className="mx-auto max-w-6xl">
@@ -197,7 +329,9 @@ export default function WithdrawalsPage() {
     <div className="min-h-screen bg-slate-950 p-6">
       <div className="mx-auto max-w-6xl space-y-6">
 
-        {/* Header */}
+        {/* ===============================
+            HEADER
+        ================================ */}
 
         <div>
           <h1 className="text-3xl font-bold text-white">
@@ -209,11 +343,13 @@ export default function WithdrawalsPage() {
           </p>
         </div>
 
-        {/* Earnings Cards */}
+        {/* ===============================
+            EARNINGS CARDS
+        ================================ */}
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 
-          {/* Current Credits */}
+          {/* CURRENT RAISED CREDITS */}
 
           <div className="rounded-2xl border border-white/10 bg-slate-900 p-6">
             <div className="flex items-center justify-between">
@@ -224,11 +360,11 @@ export default function WithdrawalsPage() {
                 </p>
 
                 <h2 className="mt-2 text-3xl font-bold text-white">
-                  {totalCredits}
+                  {totalCredits.toLocaleString()}
                 </h2>
 
                 <p className="mt-1 text-xs text-slate-500">
-                  Available campaign credits
+                  From approved campaigns
                 </p>
               </div>
 
@@ -243,7 +379,7 @@ export default function WithdrawalsPage() {
             </div>
           </div>
 
-          {/* Withdrawal Value */}
+          {/* WITHDRAWAL VALUE */}
 
           <div className="rounded-2xl border border-white/10 bg-slate-900 p-6">
             <div className="flex items-center justify-between">
@@ -254,7 +390,8 @@ export default function WithdrawalsPage() {
                 </p>
 
                 <h2 className="mt-2 text-3xl font-bold text-green-400">
-                  ${(
+                  $
+                  {(
                     totalCredits / 20
                   ).toFixed(2)}
                 </h2>
@@ -277,7 +414,9 @@ export default function WithdrawalsPage() {
 
         </div>
 
-        {/* Minimum Requirement */}
+        {/* ===============================
+            MINIMUM REQUIREMENT
+        ================================ */}
 
         <div
           className={`rounded-2xl border p-5 ${
@@ -327,7 +466,9 @@ export default function WithdrawalsPage() {
           </div>
         </div>
 
-        {/* Withdrawal Form */}
+        {/* ===============================
+            WITHDRAWAL FORM
+        ================================ */}
 
         <div className="rounded-2xl border border-white/10 bg-slate-900 p-6 md:p-8">
 
@@ -346,7 +487,9 @@ export default function WithdrawalsPage() {
             className="space-y-6"
           >
 
-            {/* Credits */}
+            {/* =========================
+                CREDITS
+            ========================== */}
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
@@ -360,10 +503,15 @@ export default function WithdrawalsPage() {
                 step="20"
                 value={creditsToWithdraw}
                 onChange={(e) =>
-                  setCreditsToWithdraw(e.target.value)
+                  setCreditsToWithdraw(
+                    e.target.value
+                  )
                 }
                 placeholder="Example: 200"
-                disabled={!canWithdraw || submitting}
+                disabled={
+                  !canWithdraw ||
+                  submitting
+                }
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
               />
 
@@ -373,10 +521,11 @@ export default function WithdrawalsPage() {
               </p>
 
               {withdrawCredits > 0 &&
-                withdrawCredits > totalCredits && (
+                withdrawCredits >
+                  totalCredits && (
                   <p className="mt-2 text-sm text-red-400">
                     You cannot withdraw more than your
-                    available credits.
+                    available raised credits.
                   </p>
                 )}
 
@@ -388,7 +537,9 @@ export default function WithdrawalsPage() {
                 )}
             </div>
 
-            {/* Withdrawal Amount */}
+            {/* =========================
+                WITHDRAWAL AMOUNT
+            ========================== */}
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
@@ -412,7 +563,9 @@ export default function WithdrawalsPage() {
               </p>
             </div>
 
-            {/* Payment System */}
+            {/* =========================
+                PAYMENT SYSTEM
+            ========================== */}
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
@@ -422,9 +575,14 @@ export default function WithdrawalsPage() {
               <select
                 value={paymentSystem}
                 onChange={(e) =>
-                  setPaymentSystem(e.target.value)
+                  setPaymentSystem(
+                    e.target.value
+                  )
                 }
-                disabled={!canWithdraw || submitting}
+                disabled={
+                  !canWithdraw ||
+                  submitting
+                }
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="">
@@ -453,7 +611,9 @@ export default function WithdrawalsPage() {
               </select>
             </div>
 
-            {/* Account Number */}
+            {/* =========================
+                ACCOUNT NUMBER
+            ========================== */}
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-300">
@@ -464,15 +624,22 @@ export default function WithdrawalsPage() {
                 type="text"
                 value={accountNumber}
                 onChange={(e) =>
-                  setAccountNumber(e.target.value)
+                  setAccountNumber(
+                    e.target.value
+                  )
                 }
                 placeholder="Enter your payment account number"
-                disabled={!canWithdraw || submitting}
+                disabled={
+                  !canWithdraw ||
+                  submitting
+                }
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
               />
             </div>
 
-            {/* Summary */}
+            {/* =========================
+                SUMMARY
+            ========================== */}
 
             {withdrawCredits > 0 && (
               <div className="rounded-xl border border-violet-500/20 bg-violet-500/5 p-5">
@@ -499,7 +666,10 @@ export default function WithdrawalsPage() {
                     </span>
 
                     <span className="font-semibold text-green-400">
-                      ${withdrawAmount.toFixed(2)}
+                      $
+                      {withdrawAmount.toFixed(
+                        2
+                      )}
                     </span>
                   </div>
 
@@ -509,7 +679,8 @@ export default function WithdrawalsPage() {
                     </span>
 
                     <span className="font-semibold text-white">
-                      {paymentSystem || "Not selected"}
+                      {paymentSystem ||
+                        "Not selected"}
                     </span>
                   </div>
 
@@ -517,12 +688,17 @@ export default function WithdrawalsPage() {
               </div>
             )}
 
-            {/* Button */}
+            {/* =========================
+                BUTTON
+            ========================== */}
 
             {canWithdraw ? (
               <button
                 type="submit"
-                disabled={submitting || !validAmount}
+                disabled={
+                  submitting ||
+                  !validAmount
+                }
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-3.5 font-semibold text-white shadow-lg shadow-violet-600/10 transition hover:from-violet-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Wallet
@@ -536,6 +712,7 @@ export default function WithdrawalsPage() {
               </button>
             ) : (
               <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-5 py-4 text-center">
+
                 <p className="font-semibold text-red-400">
                   Insufficient credit
                 </p>
@@ -544,13 +721,16 @@ export default function WithdrawalsPage() {
                   You need at least 200 credits to
                   withdraw.
                 </p>
+
               </div>
             )}
 
           </form>
         </div>
 
-        {/* Business Logic */}
+        {/* ===============================
+            BUSINESS LOGIC
+        ================================ */}
 
         <div className="rounded-2xl border border-white/10 bg-slate-900 p-5">
 
