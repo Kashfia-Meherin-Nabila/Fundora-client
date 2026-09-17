@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/app/lib/auth-client";
 import toast from "react-hot-toast";
+import server from "@/lib/core/server";
 
 export default function AddCampaignPage() {
   const router = useRouter();
@@ -35,84 +36,69 @@ export default function AddCampaignPage() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!user) {
-      toast.error("Please login first.");
-      return;
-    }
+  if (!user) {
+    toast.error("Please login first.");
+    return;
+  }
 
-    if (user.role !== "Creator") {
-      toast.error("Only creators can create campaigns.");
-      return;
-    }
+  if (user.role !== "Creator") {
+    toast.error("Only creators can create campaigns.");
+    return;
+  }
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      const campaignData = {
-        campaign_title: formData.campaign_title,
-        campaign_story: formData.campaign_story,
-        category: formData.category,
-        funding_goal: Number(formData.funding_goal),
-        minimum_contribution: Number(formData.minimum_contribution),
-        deadline: formData.deadline,
-        reward_info: formData.reward_info,
-        campaign_image_url: formData.campaign_image_url,
+  try {
+    const campaignData = {
+      campaign_title: formData.campaign_title,
+      campaign_story: formData.campaign_story,
+      category: formData.category,
+      funding_goal: Number(formData.funding_goal),
+      minimum_contribution: Number(formData.minimum_contribution),
+      deadline: formData.deadline,
+      reward_info: formData.reward_info,
+      campaign_image_url: formData.campaign_image_url,
 
-        // User information from Better Auth session
-        creator_email: user.email,
-        creator_name: user.name,
+      creator_email: user.email,
+      creator_name: user.name,
 
-        // New campaign starts as pending
-        status: "pending",
+      status: "pending",
+      raised_amount: 0,
+    };
 
-        // Initially nothing has been raised
-        raised_amount: 0,
-      };
+    console.log("Sending campaign:", campaignData);
 
-      console.log("Sending campaign:", campaignData);
+    // Send request with Better Auth JWT
+    const result = await server("/api/campaigns", {
+      method: "POST",
+      body: JSON.stringify(campaignData),
+    });
 
-      const response = await fetch("http://localhost:5000/api/campaigns", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(campaignData),
-      });
+    console.log("Campaign creation response:", result);
 
-      const result = await response.json();
+    toast.success("Campaign submitted successfully!");
 
-      if (!response.ok) {
-        console.error("Campaign creation error:", result);
+    setFormData({
+      campaign_title: "",
+      campaign_story: "",
+      category: "Technology",
+      funding_goal: "",
+      minimum_contribution: "",
+      deadline: "",
+      reward_info: "",
+      campaign_image_url: "",
+    });
 
-        throw new Error(
-          result.message || "Failed to create campaign."
-        );
-      }
-
-      toast.success("Campaign submitted successfully!");
-
-      setFormData({
-        campaign_title: "",
-        campaign_story: "",
-        category: "Technology",
-        funding_goal: "",
-        minimum_contribution: "",
-        deadline: "",
-        reward_info: "",
-        campaign_image_url: "",
-      });
-
-      router.push("/dashboard/creator/my-campaigns");
-    } catch (error) {
-      console.error("Campaign creation error:", error);
-      toast.error(error.message || "Something went wrong.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
+    router.push("/dashboard/creator/my-campaigns");
+  } catch (error) {
+    console.error("Campaign creation error:", error);
+    toast.error(error.message || "Something went wrong.");
+  } finally {
+    setLoading(false);
+  }
+};
   if (isPending) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950">

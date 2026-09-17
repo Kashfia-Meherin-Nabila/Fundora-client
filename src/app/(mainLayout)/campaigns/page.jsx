@@ -10,8 +10,9 @@ import {
   Folder,
   CircleDollar,
 } from "@gravity-ui/icons";
+import { getUserToken } from "@/lib/core/session";
 
-const API_URL = "http://localhost:5000";
+const API_URL =process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState([]);
@@ -19,35 +20,51 @@ export default function CampaignsPage() {
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  
 
   useEffect(() => {
-    const fetchCampaigns = async () => {
-      try {
-        setLoading(true);
+  const fetchCampaigns = async () => {
+    try {
+      setLoading(true);
 
-        const response = await fetch(
-          `${API_URL}/api/campaigns/explore`
-        );
+      // 1. Generate/get the Better Auth JWT
+      const token = await getUserToken();
 
-        if (!response.ok) {
-          throw new Error(
-            `Failed to fetch campaigns: ${response.status}`
-          );
-        }
-
-        const data = await response.json();
-
-        setCampaigns(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("Failed to load campaigns:", error);
-        setCampaigns([]);
-      } finally {
-        setLoading(false);
+      if (!token) {
+        throw new Error("Please log in to get your token.");
       }
-    };
 
-    fetchCampaigns();
-  }, []);
+      // 2. Send the token to your Express backend
+      const response = await fetch(
+        `${API_URL}/api/campaigns/explore`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch campaigns: ${response.status}`
+        );
+      }
+
+      const data = await response.json();
+
+      setCampaigns(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to load campaigns:", error);
+      setCampaigns([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchCampaigns();
+}, []);
 
   // Categories
   const categories = useMemo(() => {
@@ -97,6 +114,7 @@ export default function CampaignsPage() {
       (Number(raised || 0) / Number(goal)) * 100,
       100
     );
+    
   };
 
   return (
