@@ -53,6 +53,7 @@ export default function CampaignDetailsPage() {
         setError("");
 
         const token = await getUserToken();
+        // console.log(token);
         const headers = {};
 
         if (token) {

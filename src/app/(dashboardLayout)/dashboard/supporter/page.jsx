@@ -8,6 +8,7 @@ import {
   CircleCheck,
 } from "@gravity-ui/icons";
 import { authClient } from "@/app/lib/auth-client";
+import { getUserToken } from "@/lib/core/session";
 
 const API_URL = "http://localhost:5000";
 
@@ -29,14 +30,25 @@ export default function SupporterHome() {
 
   useEffect(() => {
     if (isPending || !email) return;
+        let ignore = false;
 
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
+        const token = await getUserToken();
+        // console.log("TOKEN:", token);
 
-        const response = await fetch(
-          `${API_URL}/api/supporter/dashboard/${encodeURIComponent(email)}`
-        );
+        if (!token) {
+          throw new Error("Missing auth token");
+        }
+
+        const response = await fetch(`${API_URL}/api/supporter/dashboard`, {
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -53,6 +65,7 @@ export default function SupporterHome() {
         }
 
         const data = await response.json();
+        if (ignore) return;
 
         setStats({
           totalContributions: Number(data.totalContributions || 0),

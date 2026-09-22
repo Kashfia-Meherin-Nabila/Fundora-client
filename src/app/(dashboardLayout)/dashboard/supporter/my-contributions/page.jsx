@@ -13,6 +13,7 @@ import {
   FileDollar,
 } from "@gravity-ui/icons";
 import { authClient } from "@/app/lib/auth-client";
+import { getUserToken } from "@/lib/core/session";
 
 const API_URL = "http://localhost:5000";
 
@@ -27,16 +28,29 @@ export default function MyContributionsPage() {
 
   useEffect(() => {
     if (!supporter?.email) return;
+    let ignore = false;
 
     const fetchContributions = async () => {
       try {
         setLoading(true);
         setError("");
 
+         const token = await getUserToken();
+        //  console.log(token);
+
+        if (!token) {
+          throw new Error("Missing auth token.");
+        }
+
         const response = await fetch(
-          `${API_URL}/api/contributions/supporter/${encodeURIComponent(
-            supporter.email
-          )}`
+          `${API_URL}/api/contributions/supporter`,
+          {
+            method: "GET",
+            headers: {
+              "content-type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         const data = await response.json();
@@ -59,6 +73,9 @@ export default function MyContributionsPage() {
     };
 
     fetchContributions();
+    return () => {
+      ignore = true;
+    };
   }, [supporter?.email]);
 
   // ===============================
@@ -342,7 +359,7 @@ export default function MyContributionsPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[900px]">
+              <table className="w-full min-w-225">
 
                 <thead>
                   <tr className="border-b border-slate-800 text-left">
