@@ -11,6 +11,8 @@ import {
   Person,
 } from "@gravity-ui/icons";
 import Swal from "sweetalert2";
+import { getUserToken } from "@/lib/core/session";
+import Image from "next/image";
 
 export default function CampaignApprovalsPage() {
   const [campaigns, setCampaigns] = useState([]);
@@ -24,19 +26,26 @@ export default function CampaignApprovalsPage() {
 
     const loadCampaigns = async () => {
       try {
+        const token = await getUserToken();
+
+        if (!token) {
+          throw new Error("Missing auth token.");
+        }
         const response = await fetch(
           "http://localhost:5000/api/admin/campaigns/pending",
           {
             cache: "no-store",
-          }
+            headers: {
+              "content-type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          },
         );
 
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-          throw new Error(
-            data.message || "Failed to load campaigns."
-          );
+          throw new Error(data.message || "Failed to load campaigns.");
         }
 
         if (!cancelled) {
@@ -49,9 +58,7 @@ export default function CampaignApprovalsPage() {
           Swal.fire({
             icon: "error",
             title: "Failed to load",
-            text:
-              error.message ||
-              "Unable to load pending campaigns.",
+            text: error.message || "Unable to load pending campaigns.",
             background: "#0f172a",
             color: "#fff",
             confirmButtonColor: "#8b5cf6",
@@ -92,25 +99,32 @@ export default function CampaignApprovalsPage() {
     try {
       setActionLoading(campaign._id);
 
+      const token = await getUserToken();
+      // console.log(token);
+
+      if (!token) {
+        throw new Error("Missing auth token.");
+      }
+
       const response = await fetch(
         `http://localhost:5000/api/admin/campaigns/${campaign._id}/approve`,
         {
           method: "PUT",
-        }
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Failed to approve campaign."
-        );
+        throw new Error(data.message || "Failed to approve campaign.");
       }
 
       setCampaigns((previous) =>
-        previous.filter(
-          (item) => item._id !== campaign._id
-        )
+        previous.filter((item) => item._id !== campaign._id),
       );
 
       Swal.fire({
@@ -127,9 +141,7 @@ export default function CampaignApprovalsPage() {
       Swal.fire({
         icon: "error",
         title: "Approval Failed",
-        text:
-          error.message ||
-          "Something went wrong.",
+        text: error.message || "Something went wrong.",
         background: "#0f172a",
         color: "#fff",
         confirmButtonColor: "#8b5cf6",
@@ -178,6 +190,12 @@ export default function CampaignApprovalsPage() {
 
     try {
       setActionLoading(campaign._id);
+      const token = await getUserToken();
+      // console.log(token);
+
+      if (!token) {
+        throw new Error("Missing auth token.");
+      }
 
       const response = await fetch(
         `http://localhost:5000/api/admin/campaigns/${campaign._id}/reject`,
@@ -185,25 +203,23 @@ export default function CampaignApprovalsPage() {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             reason,
           }),
-        }
+        },
       );
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Failed to reject campaign."
-        );
+        throw new Error(data.message || "Failed to reject campaign.");
       }
 
       setCampaigns((previous) =>
-        previous.filter(
-          (item) => item._id !== campaign._id
-        )
+        previous.filter((item) => item._id !== campaign._id),
       );
 
       Swal.fire({
@@ -220,9 +236,7 @@ export default function CampaignApprovalsPage() {
       Swal.fire({
         icon: "error",
         title: "Rejection Failed",
-        text:
-          error.message ||
-          "Something went wrong.",
+        text: error.message || "Something went wrong.",
         background: "#0f172a",
         color: "#fff",
         confirmButtonColor: "#8b5cf6",
@@ -261,9 +275,7 @@ export default function CampaignApprovalsPage() {
           </div>
 
           <div>
-            <h1 className="text-2xl font-bold">
-              Campaign Approvals
-            </h1>
+            <h1 className="text-2xl font-bold">Campaign Approvals</h1>
 
             <p className="text-sm text-slate-400">
               Review and manage newly submitted campaigns
@@ -277,13 +289,9 @@ export default function CampaignApprovalsPage() {
       <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-400">
-              Pending Campaigns
-            </p>
+            <p className="text-sm text-slate-400">Pending Campaigns</p>
 
-            <p className="mt-1 text-3xl font-bold">
-              {campaigns.length}
-            </p>
+            <p className="mt-1 text-3xl font-bold">{campaigns.length}</p>
           </div>
 
           <div className="rounded-xl bg-amber-500/10 p-3">
@@ -300,9 +308,7 @@ export default function CampaignApprovalsPage() {
             <CircleCheckFill className="h-8 w-8 text-emerald-400" />
           </div>
 
-          <h2 className="text-lg font-semibold">
-            No Pending Campaigns
-          </h2>
+          <h2 className="text-lg font-semibold">No Pending Campaigns</h2>
 
           <p className="mt-2 text-sm text-slate-400">
             All submitted campaigns have been reviewed.
@@ -353,9 +359,11 @@ export default function CampaignApprovalsPage() {
                     <td className="px-5 py-5">
                       <div className="flex items-center gap-3">
                         {campaign.campaign_image_url ? (
-                          <img
+                          <Image
                             src={campaign.campaign_image_url}
                             alt={campaign.campaign_title}
+                            width={45}
+                            height={45}
                             className="h-12 w-16 rounded-lg object-cover"
                           />
                         ) : (
@@ -399,9 +407,8 @@ export default function CampaignApprovalsPage() {
                     <td className="px-5 py-5">
                       <div className="flex items-center gap-1 text-sm font-semibold text-emerald-400">
                         <HandOk className="h-4 w-4" />
-
                         {Number(
-                          campaign.funding_goal || 0
+                          campaign.funding_goal || 0,
                         ).toLocaleString()}{" "}
                         credits
                       </div>
@@ -411,7 +418,7 @@ export default function CampaignApprovalsPage() {
 
                     <td className="px-5 py-5 text-sm text-slate-300">
                       {Number(
-                        campaign.minimum_contribution || 0
+                        campaign.minimum_contribution || 0,
                       ).toLocaleString()}{" "}
                       credits
                     </td>
@@ -423,9 +430,7 @@ export default function CampaignApprovalsPage() {
                         <Calendar className="h-4 w-4 text-slate-500" />
 
                         {campaign.deadline
-                          ? new Date(
-                              campaign.deadline
-                            ).toLocaleDateString()
+                          ? new Date(campaign.deadline).toLocaleDateString()
                           : "N/A"}
                       </div>
                     </td>
@@ -448,16 +453,11 @@ export default function CampaignApprovalsPage() {
 
                         <button
                           type="button"
-                          disabled={
-                            actionLoading === campaign._id
-                          }
-                          onClick={() =>
-                            handleApprove(campaign)
-                          }
+                          disabled={actionLoading === campaign._id}
+                          onClick={() => handleApprove(campaign)}
                           className="flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-400 transition hover:bg-emerald-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <CircleCheckFill className="h-4 w-4" />
-
                           Approve
                         </button>
 
@@ -465,16 +465,11 @@ export default function CampaignApprovalsPage() {
 
                         <button
                           type="button"
-                          disabled={
-                            actionLoading === campaign._id
-                          }
-                          onClick={() =>
-                            handleReject(campaign)
-                          }
+                          disabled={actionLoading === campaign._id}
+                          onClick={() => handleReject(campaign)}
                           className="flex items-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <CircleXmarkFill className="h-4 w-4" />
-
                           Reject
                         </button>
                       </div>

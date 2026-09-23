@@ -7,6 +7,7 @@ import {
   Wallet,
   CreditCard,
 } from "@gravity-ui/icons";
+import { getUserToken } from "@/lib/core/session";
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -23,16 +24,29 @@ export default function AdminDashboard() {
     useState("");
 
   useEffect(() => {
+    let ignore = false;
     const fetchAdminStats = async () => {
       try {
         setLoading(true);
+
+       const token = await getUserToken();
+       console.log(token);
+
+        if (!token) {
+          throw new Error("Missing auth token.");
+        }
 
         const response = await fetch(
           "http://localhost:5000/api/admin/stats",
           {
             cache: "no-store",
+            headers: {
+              "content-type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
+
 
         const data = await response.json();
 
@@ -60,6 +74,10 @@ export default function AdminDashboard() {
     };
 
     fetchAdminStats();
+    return () => {
+      ignore = true;
+    };
+  
   }, []);
 
   const statCards = [

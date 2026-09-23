@@ -13,6 +13,7 @@ import {
   Clock,
 } from "@gravity-ui/icons";
 import Swal from "sweetalert2";
+import { getUserToken } from "@/lib/core/session";
 
 export default function ReportsPage() {
   const [reports, setReports] = useState([]);
@@ -27,10 +28,21 @@ export default function ReportsPage() {
 
     const fetchReports = async () => {
       try {
+       const token = await getUserToken();
+      //  console.log(token);
+
+        if (!token) {
+          throw new Error("Missing auth token.");
+        }
+
         const response = await fetch(
           "http://localhost:5000/api/admin/reports",
           {
             cache: "no-store",
+            headers: {
+              "content-type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
 
@@ -99,10 +111,20 @@ export default function ReportsPage() {
     setActionId(report._id);
 
     try {
+       const token = await getUserToken();
+      //  console.log(token);
+
+      if (!token) {
+        throw new Error("Missing auth token.");
+      }
+
       const response = await fetch(
         `http://localhost:5000/api/admin/reports/${report._id}/suspend`,
         {
           method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -171,10 +193,20 @@ export default function ReportsPage() {
     setActionId(report._id);
 
     try {
+      const token = await getUserToken();
+      // console.log(token);
+
+      if (!token) {
+        throw new Error("Missing auth token.");
+      }
+
       const response = await fetch(
         `http://localhost:5000/api/admin/reports/${report._id}/campaign`,
         {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 

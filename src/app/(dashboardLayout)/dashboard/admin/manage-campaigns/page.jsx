@@ -12,6 +12,8 @@ import {
   Magnifier,
 } from "@gravity-ui/icons";
 import Swal from "sweetalert2";
+import Image from "next/image";
+import { getUserToken } from "@/lib/core/session";
 
 export default function ManageCampaignsPage() {
   const [campaigns, setCampaigns] = useState([]);
@@ -27,11 +29,20 @@ export default function ManageCampaignsPage() {
 
     const fetchCampaigns = async () => {
       try {
+        const token = await getUserToken();
+
+        if (!token) {
+          throw new Error("Missing auth token.");
+        }
         const response = await fetch(
           "http://localhost:5000/api/admin/campaigns",
           {
             cache: "no-store",
-          }
+            headers: {
+              "content-type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          },
         );
 
         const data = await response.json();
@@ -116,25 +127,30 @@ export default function ManageCampaignsPage() {
     setDeletingId(campaign._id);
 
     try {
+      const token = await getUserToken();
+      // console.log(token);
+
+      if (!token) {
+        throw new Error("Missing auth token.");
+      }
       const response = await fetch(
         `http://localhost:5000/api/admin/campaigns/${campaign._id}`,
         {
           method: "DELETE",
-        }
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
       );
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Failed to delete campaign."
-        );
+        throw new Error(data.message || "Failed to delete campaign.");
       }
 
       // Remove deleted campaign from UI
-      setCampaigns((prev) =>
-        prev.filter((item) => item._id !== campaign._id)
-      );
+      setCampaigns((prev) => prev.filter((item) => item._id !== campaign._id));
 
       Swal.fire({
         icon: "success",
@@ -207,11 +223,11 @@ export default function ManageCampaignsPage() {
   const totalCampaigns = campaigns.length;
 
   const approvedCampaigns = campaigns.filter(
-    (campaign) => campaign.status === "approved"
+    (campaign) => campaign.status === "approved",
   ).length;
 
   const pendingCampaigns = campaigns.filter(
-    (campaign) => campaign.status === "pending"
+    (campaign) => campaign.status === "pending",
   ).length;
 
   return (
@@ -224,11 +240,7 @@ export default function ManageCampaignsPage() {
           <div>
             <div className="mb-2 flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-600/15">
-                <Folder
-                  width={22}
-                  height={22}
-                  className="text-violet-400"
-                />
+                <Folder width={22} height={22} className="text-violet-400" />
               </div>
 
               <div>
@@ -263,11 +275,7 @@ export default function ManageCampaignsPage() {
             </div>
 
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-500/10">
-              <Folder
-                width={21}
-                height={21}
-                className="text-violet-400"
-              />
+              <Folder width={21} height={21} className="text-violet-400" />
             </div>
           </div>
         </div>
@@ -286,11 +294,7 @@ export default function ManageCampaignsPage() {
             </div>
 
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10">
-              <Eye
-                width={21}
-                height={21}
-                className="text-emerald-400"
-              />
+              <Eye width={21} height={21} className="text-emerald-400" />
             </div>
           </div>
         </div>
@@ -309,11 +313,7 @@ export default function ManageCampaignsPage() {
             </div>
 
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/10">
-              <Clock
-                width={21}
-                height={21}
-                className="text-amber-400"
-              />
+              <Clock width={21} height={21} className="text-amber-400" />
             </div>
           </div>
         </div>
@@ -348,9 +348,7 @@ export default function ManageCampaignsPage() {
         <div className="border-b border-white/10 px-5 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-semibold text-white">
-                All Campaigns
-              </h2>
+              <h2 className="font-semibold text-white">All Campaigns</h2>
 
               <p className="mt-1 text-xs text-slate-500">
                 {filteredCampaigns.length} campaign
@@ -366,20 +364,14 @@ export default function ManageCampaignsPage() {
             <div className="text-center">
               <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-violet-500/20 border-t-violet-500" />
 
-              <p className="text-sm text-slate-500">
-                Loading campaigns...
-              </p>
+              <p className="text-sm text-slate-500">Loading campaigns...</p>
             </div>
           </div>
         ) : filteredCampaigns.length === 0 ? (
           /* Empty */
           <div className="flex min-h-80 flex-col items-center justify-center px-6 text-center">
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-800">
-              <Folder
-                width={25}
-                height={25}
-                className="text-slate-600"
-              />
+              <Folder width={25} height={25} className="text-slate-600" />
             </div>
 
             <h3 className="text-lg font-semibold text-white">
@@ -441,9 +433,11 @@ export default function ManageCampaignsPage() {
                       <div className="flex max-w-[250px] items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-violet-500/10">
                           {campaign.campaign_image_url ? (
-                            <img
+                            <Image
                               src={campaign.campaign_image_url}
                               alt={campaign.title || "Campaign"}
+                              width={44}
+                              height={44}
                               className="h-full w-full object-cover"
                             />
                           ) : (
@@ -505,9 +499,7 @@ export default function ManageCampaignsPage() {
                         />
 
                         <span className="text-sm font-semibold text-white">
-                          {Number(
-                            campaign.funding_goal || 0
-                          ).toLocaleString()}
+                          {Number(campaign.funding_goal || 0).toLocaleString()}
                         </span>
                       </div>
                     </td>
@@ -516,9 +508,7 @@ export default function ManageCampaignsPage() {
                     <td className="px-5 py-5">
                       <div>
                         <p className="text-sm font-semibold text-emerald-400">
-                          {Number(
-                            campaign.raised_amount || 0
-                          ).toLocaleString()}
+                          {Number(campaign.raised_amount || 0).toLocaleString()}
                         </p>
 
                         <p className="mt-1 text-[11px] text-slate-600">
@@ -546,7 +536,7 @@ export default function ManageCampaignsPage() {
                     <td className="px-5 py-5">
                       <span
                         className={`inline-flex rounded-full border px-3 py-1.5 text-xs font-medium capitalize ${getStatusStyle(
-                          campaign.status
+                          campaign.status,
                         )}`}
                       >
                         {campaign.status || "unknown"}
@@ -561,14 +551,9 @@ export default function ManageCampaignsPage() {
                         disabled={deletingId === campaign._id}
                         className="inline-flex items-center gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        <TrashBin
-                          width={16}
-                          height={16}
-                        />
+                        <TrashBin width={16} height={16} />
 
-                        {deletingId === campaign._id
-                          ? "Deleting..."
-                          : "Delete"}
+                        {deletingId === campaign._id ? "Deleting..." : "Delete"}
                       </button>
                     </td>
                   </tr>

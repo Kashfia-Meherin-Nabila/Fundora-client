@@ -11,6 +11,8 @@ import {
   TrashBin,
 } from "@gravity-ui/icons";
 import Swal from "sweetalert2";
+import Image from "next/image";
+import { getUserToken } from "@/lib/core/session";
 
 export default function ManageUsersPage() {
   const [users, setUsers] = useState([]);
@@ -21,13 +23,24 @@ export default function ManageUsersPage() {
 
   useEffect(() => {
     let cancelled = false;
+    
 
     const loadUsers = async () => {
       try {
+        const token = await getUserToken();
+
+        if (!token) {
+          throw new Error("Missing auth token.");
+        }
+
         const response = await fetch(
           "http://localhost:5000/api/admin/users",
           {
             cache: "no-store",
+            headers: {
+              "content-type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
 
@@ -96,16 +109,21 @@ export default function ManageUsersPage() {
     try {
       setActionLoading(user._id);
 
+      const token = await getUserToken();
+
+      if (!token) {
+        throw new Error("Missing auth token.");
+      }
+
       const response = await fetch(
         `http://localhost:5000/api/admin/users/${user._id}/role`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            role: newRole,
-          }),
+          body: JSON.stringify({ role: newRole }),
         }
       );
 
@@ -178,10 +196,20 @@ export default function ManageUsersPage() {
     try {
       setActionLoading(user._id);
 
+      const token = await getUserToken();
+      // console.log(token);
+
+      if (!token) {
+        throw new Error("Missing auth token.");
+      }
+
       const response = await fetch(
         `http://localhost:5000/api/admin/users/${user._id}`,
         {
           method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
@@ -433,11 +461,13 @@ export default function ManageUsersPage() {
                         <div className="flex items-center gap-3">
                           <div className="h-11 w-11 shrink-0 overflow-hidden rounded-full border border-violet-500/30 bg-slate-800">
                             {photo ? (
-                              <img
-                                src={photo}
-                                alt={name}
-                                className="h-full w-full object-cover"
-                              />
+                              <Image
+      src={photo}
+      alt={name}
+      width={44}
+      height={44}
+      className="h-full w-full object-cover"
+    />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center">
                                 <Person className="h-5 w-5 text-slate-500" />

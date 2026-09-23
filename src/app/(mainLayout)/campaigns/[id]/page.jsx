@@ -260,20 +260,18 @@ export default function CampaignDetailsPage() {
         throw new Error("Please log in to report a campaign.");
       }
 
-      const response = await fetch(`${API_URL}/api/reports`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          campaign_id: campaign._id,
-          campaign_title: campaign.campaign_title,
-          reporter_name: supporter.name,
-          reporter_email: supporter.email,
-          reason: result.value.trim(),
-        }),
-      });
+     const response = await fetch(`${API_URL}/api/reports`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  },
+  body: JSON.stringify({
+    campaign_id: campaign._id,
+    campaign_title: campaign.campaign_title,
+    reason: result.value.trim(),
+  }),
+});
 
       const data = await response.json();
 

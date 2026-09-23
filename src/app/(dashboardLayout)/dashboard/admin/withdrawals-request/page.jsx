@@ -11,6 +11,7 @@ import {
   CreditCard,
 } from "@gravity-ui/icons";
 import Swal from "sweetalert2";
+import { getUserToken } from "@/lib/core/session";
 
 export default function WithdrawalRequestsPage() {
   const [withdrawals, setWithdrawals] = useState([]);
@@ -24,10 +25,20 @@ export default function WithdrawalRequestsPage() {
 
     const loadWithdrawals = async () => {
       try {
+         const token = await getUserToken();
+
+        if (!token) {
+          throw new Error("Missing auth token.");
+        }
+
         const response = await fetch(
           "http://localhost:5000/api/admin/withdrawals/pending",
           {
             cache: "no-store",
+            headers: {
+              "content-type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
 
@@ -118,12 +129,22 @@ export default function WithdrawalRequestsPage() {
     try {
       setActionLoading(withdrawal._id);
 
+      const token = await getUserToken();
+
+      if (!token) {
+        throw new Error("Missing auth token.");
+      }
+
       const response = await fetch(
         `http://localhost:5000/api/admin/withdrawals/${withdrawal._id}/approve`,
         {
           method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
+
 
       const data = await response.json();
 
@@ -174,7 +195,7 @@ export default function WithdrawalRequestsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 p-6 text-white md:p-8">
-        <div className="flex min-h-[400px] items-center justify-center">
+        <div className="flex min-h-100 items-center justify-center">
           <div className="text-center">
             <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-slate-700 border-t-violet-500" />
 
@@ -292,7 +313,7 @@ export default function WithdrawalRequestsPage() {
 
         <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[950px]">
+            <table className="w-full min-w-237.5">
               <thead>
                 <tr className="border-b border-slate-800 bg-slate-900">
                   <th className="px-5 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-400">
