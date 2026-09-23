@@ -8,6 +8,8 @@ import {
   CreditCard,
 } from "@gravity-ui/icons";
 import { getUserToken } from "@/lib/core/session";
+import API_URL from "@/lib/core/url";
+
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -37,7 +39,7 @@ export default function AdminDashboard() {
         }
 
         const response = await fetch(
-          "http://localhost:5000/api/admin/stats",
+          `${API_URL}/api/admin/stats`,
           {
             cache: "no-store",
             headers: {

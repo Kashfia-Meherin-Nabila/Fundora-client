@@ -21,8 +21,8 @@ import {
 import Swal from "sweetalert2";
 import { authClient } from "@/app/lib/auth-client";
 import { getUserToken } from "@/lib/core/session";
+import API_URL from "@/lib/core/url";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function CampaignDetailsPage() {
   const params = useParams();
@@ -311,8 +311,8 @@ export default function CampaignDetailsPage() {
         <div className="mx-auto max-w-6xl animate-pulse">
           <div className="h-6 w-32 rounded bg-slate-800" />
           <div className="mt-8 grid gap-8 lg:grid-cols-3">
-            <div className="h-[500px] rounded-3xl bg-slate-900 lg:col-span-2" />
-            <div className="h-[500px] rounded-3xl bg-slate-900" />
+            <div className="h-125 rounded-3xl bg-slate-900 lg:col-span-2" />
+            <div className="h-125 rounded-3xl bg-slate-900" />
           </div>
         </div>
       </main>
@@ -360,7 +360,7 @@ export default function CampaignDetailsPage() {
 
         <div className="grid gap-8 lg:grid-cols-3">
           <section className="lg:col-span-2">
-            <div className="relative h-[320px] overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 sm:h-[430px]">
+            <div className="relative h-100 overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 sm:h-107.5">
               <Image
                 src={campaign.campaign_image_url}
                 alt={campaign.campaign_title || "Campaign"}
@@ -369,7 +369,7 @@ export default function CampaignDetailsPage() {
                 className="object-cover"
                 sizes="(max-width: 1024px) 100vw, 66vw"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-slate-950/80 via-transparent to-transparent" />
               <div className="absolute bottom-5 left-5">
                 <span className="rounded-full border border-violet-400/20 bg-violet-500/20 px-4 py-2 text-sm font-semibold text-violet-200 backdrop-blur-md">
                   {campaign.category}
@@ -460,7 +460,7 @@ export default function CampaignDetailsPage() {
               <div className="mt-6">
                 <div className="h-3 overflow-hidden rounded-full bg-slate-800">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-violet-600 to-pink-500 transition-all"
+                    className="h-full rounded-full bg-linear-to-r from-violet-600 to-pink-500 transition-all"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
@@ -554,7 +554,7 @@ export default function CampaignDetailsPage() {
                     <button
                       type="submit"
                       disabled={submitting || isExpired}
-                      className="mt-5 w-full rounded-xl bg-gradient-to-r from-violet-600 to-pink-600 px-5 py-3.5 font-bold text-white shadow-lg shadow-violet-900/20 transition hover:from-violet-500 hover:to-pink-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="mt-5 w-full rounded-xl bg-linear-to-r from-violet-600 to-pink-600 px-5 py-3.5 font-bold text-white shadow-lg shadow-violet-900/20 transition hover:from-violet-500 hover:to-pink-500 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {submitting
                         ? "Submitting..."

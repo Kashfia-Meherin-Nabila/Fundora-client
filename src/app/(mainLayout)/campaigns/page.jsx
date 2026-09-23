@@ -11,8 +11,8 @@ import {
   CircleDollar,
 } from "@gravity-ui/icons";
 import { getUserToken } from "@/lib/core/session";
+import API_URL from "@/lib/core/url";
 
-const API_URL =process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState([]);
@@ -123,7 +123,7 @@ export default function CampaignsPage() {
       {/* =========================
           HERO SECTION
       ========================= */}
-      <section className="border-b border-slate-800 bg-gradient-to-b from-violet-950/30 to-slate-950">
+      <section className="border-b border-slate-800 bg-linear-to-b from-violet-950/30 to-slate-950">
 
         <div className="mx-auto max-w-7xl px-6 py-16 text-center">
 
@@ -259,7 +259,7 @@ export default function CampaignsPage() {
 
         {/* Empty */}
         {!loading && filteredCampaigns.length === 0 && (
-          <div className="flex min-h-[350px] flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 text-center">
+          <div className="flex min-h-87.5 flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 text-center">
 
             <div className="rounded-full bg-slate-800 p-4">
               <Folder
@@ -334,7 +334,7 @@ export default function CampaignsPage() {
                   <div className="p-6">
 
                     {/* Title */}
-                    <h3 className="line-clamp-2 min-h-[56px] text-xl font-semibold leading-7">
+                    <h3 className="line-clamp-2 min-h-14 text-xl font-semibold leading-7">
                       {campaign.campaign_title}
                     </h3>
 

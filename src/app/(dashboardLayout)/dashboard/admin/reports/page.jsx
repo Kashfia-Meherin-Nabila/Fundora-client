@@ -14,6 +14,7 @@ import {
 } from "@gravity-ui/icons";
 import Swal from "sweetalert2";
 import { getUserToken } from "@/lib/core/session";
+import API_URL from "@/lib/core/url";
 
 export default function ReportsPage() {
   const [reports, setReports] = useState([]);
@@ -36,7 +37,7 @@ export default function ReportsPage() {
         }
 
         const response = await fetch(
-          "http://localhost:5000/api/admin/reports",
+          `${API_URL}/api/admin/reports`,
           {
             cache: "no-store",
             headers: {
@@ -119,7 +120,7 @@ export default function ReportsPage() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/admin/reports/${report._id}/suspend`,
+        `${API_URL}/api/admin/reports/${report._id}/suspend`,
         {
           method: "PUT",
           headers: {
@@ -201,7 +202,7 @@ export default function ReportsPage() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/admin/reports/${report._id}/campaign`,
+        `${API_URL}/api/admin/reports/${report._id}/campaign`,
         {
           method: "DELETE",
           headers: {

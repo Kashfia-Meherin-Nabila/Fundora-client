@@ -13,6 +13,7 @@ import {
   CircleDollar,
 } from "@gravity-ui/icons";
 import { getUserToken } from "@/lib/core/session";
+import API_URL from "@/lib/core/url";
 
 export default function PaymentHistoryPage() {
   const { data: session, isPending } = useSession();
@@ -35,7 +36,7 @@ export default function PaymentHistoryPage() {
         }
 
         const response = await fetch(
-          `http://localhost:5000/api/withdrawals/creator`,
+          `${API_URL}/api/withdrawals/creator`,
           {
             headers: {
               "content-type": "application/json",
@@ -107,7 +108,7 @@ export default function PaymentHistoryPage() {
   if (isPending || loading) {
     return (
       <div className="min-h-screen bg-slate-950 p-8">
-        <div className="flex min-h-[400px] items-center justify-center">
+        <div className="flex min-h-100 items-center justify-center">
           <div className="text-slate-400">
             Loading payment history...
           </div>
@@ -231,7 +232,7 @@ export default function PaymentHistoryPage() {
         </div>
 
         {payments.length === 0 ? (
-          <div className="flex min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-slate-950/50">
+          <div className="flex min-h-75 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-slate-950/50">
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-slate-800 text-slate-500">
               <CreditCard width={26} height={26} />
             </div>
@@ -246,7 +247,7 @@ export default function PaymentHistoryPage() {
           </div>
         ) : (
           <div className="overflow-x-auto rounded-xl border border-white/10">
-            <table className="w-full min-w-[900px] text-left">
+            <table className="w-full min-w-225 text-left">
               <thead>
                 <tr className="border-b border-white/10 bg-slate-950/70">
                   <th className="px-5 py-4 text-xs font-semibold uppercase tracking-wider text-slate-400">

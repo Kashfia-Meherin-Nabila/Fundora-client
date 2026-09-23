@@ -1,6 +1,6 @@
 import { getUserToken } from "@/lib/core/session";
+import API_URL from "./url";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const server = async (endpoint, options = {}) => {
   const token = await getUserToken();

@@ -449,7 +449,7 @@ const loadDashboard = useCallback(async () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[850px] text-left">
+              <table className="w-full min-w-212.5 text-left">
                 <thead className="bg-slate-800/70 text-xs uppercase tracking-wider text-slate-400">
                   <tr>
                     <th className="px-6 py-4 font-semibold">
@@ -712,7 +712,7 @@ function DetailRow({ label, value, highlight = false }) {
       <p className="shrink-0 text-sm text-slate-400">{label}</p>
 
       <p
-        className={`break-words text-sm font-medium sm:text-right ${
+        className={`wrap-break text-sm font-medium sm:text-right ${
           highlight ? "text-violet-300" : "text-white"
         }`}
       >

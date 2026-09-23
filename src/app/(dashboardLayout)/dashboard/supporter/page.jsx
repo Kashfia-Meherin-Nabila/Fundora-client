@@ -9,8 +9,9 @@ import {
 } from "@gravity-ui/icons";
 import { authClient } from "@/app/lib/auth-client";
 import { getUserToken } from "@/lib/core/session";
+import API_URL from "@/lib/core/url";
 
-const API_URL = "http://localhost:5000";
+
 
 export default function SupporterHome() {
   const { data: session, isPending } = authClient.useSession();

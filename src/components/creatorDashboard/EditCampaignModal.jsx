@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { Modal, TextArea } from "@heroui/react";
 import { PencilToSquare, Xmark } from "@gravity-ui/icons";
 import toast from "react-hot-toast";
+import API_URL from "@/lib/core/url";
 
 export default function EditCampaignModal({ campaign, refetch }) {
   const [open, setOpen] = useState(false);
@@ -60,7 +61,7 @@ export default function EditCampaignModal({ campaign, refetch }) {
       };
 
       const response = await fetch(
-        `http://localhost:5000/api/campaigns/${campaign._id}`,
+        `${API_URL}/api/campaigns/${campaign._id}`,
         {
           method: "PUT",
           headers: {
@@ -388,7 +389,7 @@ export default function EditCampaignModal({ campaign, refetch }) {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="rounded-xl bg-linear-to-r from-violet-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {loading
                         ? "Updating..."

@@ -7,6 +7,7 @@ import { authClient, useSession } from "@/app/lib/auth-client";
 import Swal from "sweetalert2";
 import EditCampaignModal from "@/components/creatorDashboard/EditCampaignModal";
 import Image from "next/image";
+import API_URL from "@/lib/core/url";
 
 const MyCampaigns = () => {
   const { data: session, isPending } = useSession();
@@ -32,7 +33,7 @@ const MyCampaigns = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:5000/api/campaigns/creator`,
+        `${API_URL}/api/campaigns/creator`,
         {
           method: "GET",
           headers: {
@@ -65,7 +66,7 @@ const MyCampaigns = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          `http://localhost:5000/api/campaigns/creator`,
+          `${API_URL}/api/campaigns/creator`,
           {
             method: "GET",
             headers: {
@@ -118,7 +119,7 @@ const MyCampaigns = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/campaigns/${id}`,
+        `${API_URL}/api/campaigns/${id}`,
         {
           method: "DELETE",
           headers: {

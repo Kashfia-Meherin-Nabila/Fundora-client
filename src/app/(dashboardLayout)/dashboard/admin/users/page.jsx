@@ -13,6 +13,7 @@ import {
 import Swal from "sweetalert2";
 import Image from "next/image";
 import { getUserToken } from "@/lib/core/session";
+import API_URL from "@/lib/core/url";
 
 export default function ManageUsersPage() {
   const [users, setUsers] = useState([]);
@@ -34,7 +35,7 @@ export default function ManageUsersPage() {
         }
 
         const response = await fetch(
-          "http://localhost:5000/api/admin/users",
+          `${API_URL}/api/admin/users`,
           {
             cache: "no-store",
             headers: {
@@ -116,7 +117,7 @@ export default function ManageUsersPage() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/admin/users/${user._id}/role`,
+        `${API_URL}/api/admin/users/${user._id}/role`,
         {
           method: "PUT",
           headers: {
@@ -204,7 +205,7 @@ export default function ManageUsersPage() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/admin/users/${user._id}`,
+        `${API_URL}/api/admin/users/${user._id}`,
         {
           method: "DELETE",
           headers: {

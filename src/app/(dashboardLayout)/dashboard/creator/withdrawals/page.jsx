@@ -10,8 +10,9 @@ import {
 } from "@gravity-ui/icons";
 import toast from "react-hot-toast";
 import { getUserToken } from "@/lib/core/session";
+import API_URL from "@/lib/core/url";
 
-const API_URL = "http://localhost:5000";
+
 
 export default function WithdrawalsPage() {
   const {

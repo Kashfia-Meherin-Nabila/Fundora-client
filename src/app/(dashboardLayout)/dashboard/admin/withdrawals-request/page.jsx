@@ -12,6 +12,7 @@ import {
 } from "@gravity-ui/icons";
 import Swal from "sweetalert2";
 import { getUserToken } from "@/lib/core/session";
+import API_URL from "@/lib/core/url";
 
 export default function WithdrawalRequestsPage() {
   const [withdrawals, setWithdrawals] = useState([]);
@@ -32,7 +33,7 @@ export default function WithdrawalRequestsPage() {
         }
 
         const response = await fetch(
-          "http://localhost:5000/api/admin/withdrawals/pending",
+          `${API_URL}/api/admin/withdrawals/pending`,
           {
             cache: "no-store",
             headers: {
@@ -136,7 +137,7 @@ export default function WithdrawalRequestsPage() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/admin/withdrawals/${withdrawal._id}/approve`,
+        `${API_URL}/api/admin/withdrawals/${withdrawal._id}/approve`,
         {
           method: "PUT",
           headers: {

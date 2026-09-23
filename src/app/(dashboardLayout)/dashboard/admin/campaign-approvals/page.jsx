@@ -13,6 +13,7 @@ import {
 import Swal from "sweetalert2";
 import { getUserToken } from "@/lib/core/session";
 import Image from "next/image";
+import API_URL from "@/lib/core/url";
 
 export default function CampaignApprovalsPage() {
   const [campaigns, setCampaigns] = useState([]);
@@ -32,7 +33,7 @@ export default function CampaignApprovalsPage() {
           throw new Error("Missing auth token.");
         }
         const response = await fetch(
-          "http://localhost:5000/api/admin/campaigns/pending",
+          `${API_URL}/api/admin/campaigns/pending`,
           {
             cache: "no-store",
             headers: {
@@ -107,7 +108,7 @@ export default function CampaignApprovalsPage() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/admin/campaigns/${campaign._id}/approve`,
+        `${API_URL}/api/admin/campaigns/${campaign._id}/approve`,
         {
           method: "PUT",
           headers: {
@@ -198,7 +199,7 @@ export default function CampaignApprovalsPage() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/admin/campaigns/${campaign._id}/reject`,
+        `${API_URL}/api/admin/campaigns/${campaign._id}/reject`,
         {
           method: "PUT",
           headers: {

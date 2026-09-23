@@ -14,6 +14,7 @@ import {
 import Swal from "sweetalert2";
 import Image from "next/image";
 import { getUserToken } from "@/lib/core/session";
+import API_URL from "@/lib/core/url";
 
 export default function ManageCampaignsPage() {
   const [campaigns, setCampaigns] = useState([]);
@@ -35,7 +36,7 @@ export default function ManageCampaignsPage() {
           throw new Error("Missing auth token.");
         }
         const response = await fetch(
-          "http://localhost:5000/api/admin/campaigns",
+          `${API_URL}/api/admin/campaigns`,
           {
             cache: "no-store",
             headers: {
@@ -134,7 +135,7 @@ export default function ManageCampaignsPage() {
         throw new Error("Missing auth token.");
       }
       const response = await fetch(
-        `http://localhost:5000/api/admin/campaigns/${campaign._id}`,
+        `${API_URL}/api/admin/campaigns/${campaign._id}`,
         {
           method: "DELETE",
           headers: {
