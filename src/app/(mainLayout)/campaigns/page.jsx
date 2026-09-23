@@ -10,8 +10,9 @@ import {
   Folder,
   CircleDollar,
 } from "@gravity-ui/icons";
-import { getUserToken } from "@/lib/core/session";
+
 import API_URL from "@/lib/core/url";
+import { authClient } from "@/app/lib/auth-client";
 
 
 export default function CampaignsPage() {
@@ -20,6 +21,18 @@ export default function CampaignsPage() {
 
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+
+  const { data: session, isPending } = authClient.useSession();
+
+const isLoggedIn = !!session?.user;
+
+const getCampaignHref = (campaignId) => {
+  const detailsUrl = `/campaigns/${campaignId}`;
+
+  return isLoggedIn
+    ? detailsUrl
+    : `/login?callbackURL=${encodeURIComponent(detailsUrl)}`;
+};
   
 
   useEffect(() => {
@@ -27,23 +40,17 @@ export default function CampaignsPage() {
     try {
       setLoading(true);
 
-      // 1. Generate/get the Better Auth JWT
-      const token = await getUserToken();
-
-      if (!token) {
-        throw new Error("Please log in to get your token.");
-      }
-
       // 2. Send the token to your Express backend
+      console.log("Fetching from:", `${API_URL}/api/campaigns/explore`);
       const response = await fetch(
         `${API_URL}/api/campaigns/explore`,
         {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
+        // console.log("Fetching from:", `${API_URL}/api/campaigns/explore`);
       );
 
       if (!response.ok) {
@@ -435,16 +442,20 @@ export default function CampaignsPage() {
 
                     {/* View Details */}
                     <Link
-                      href={`/campaigns/${campaign._id}`}
-                      className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-3 font-medium transition hover:bg-violet-500"
-                    >
-                      <Eye
-                        width={18}
-                        height={18}
-                      />
-
-                      View Details
-                    </Link>
+  href={getCampaignHref(campaign._id)}
+  aria-disabled={isPending}
+  onClick={(e) => {
+    if (isPending) {
+      e.preventDefault();
+    }
+  }}
+  className={`mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-violet-600 py-3 font-medium transition hover:bg-violet-500 ${
+    isPending ? "pointer-events-none opacity-60" : ""
+  }`}
+>
+  <Eye width={18} height={18} />
+  {isPending ? "Checking..." : "View Details"}
+</Link>
 
                   </div>
                 </article>
