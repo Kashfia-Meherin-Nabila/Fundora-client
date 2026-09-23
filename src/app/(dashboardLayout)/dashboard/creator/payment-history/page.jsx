@@ -12,6 +12,7 @@ import {
   
   CircleDollar,
 } from "@gravity-ui/icons";
+import { getUserToken } from "@/lib/core/session";
 
 export default function PaymentHistoryPage() {
   const { data: session, isPending } = useSession();
@@ -27,11 +28,20 @@ export default function PaymentHistoryPage() {
     const fetchPaymentHistory = async () => {
       try {
         setLoading(true);
+        const token = await getUserToken();
+
+        if (!token) {
+          throw new Error("Missing auth token.");
+        }
 
         const response = await fetch(
-          `http://localhost:5000/api/withdrawals/creator/${encodeURIComponent(
-            email
-          )}`
+          `http://localhost:5000/api/withdrawals/creator`,
+          {
+            headers: {
+              "content-type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
 
         if (!response.ok) {

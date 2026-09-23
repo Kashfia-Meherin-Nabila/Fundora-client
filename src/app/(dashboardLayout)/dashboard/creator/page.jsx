@@ -75,22 +75,18 @@ export default function CreatorHome() {
   const [actionLoading, setActionLoading] = useState("");
   const [error, setError] = useState("");
   
-
-  // ---------------------------------------
   // LOAD CREATOR DASHBOARD
-  // ---------------------------------------
+  
 const loadDashboard = useCallback(async () => {
   if (!userEmail) return;
-
-  const email = encodeURIComponent(userEmail);
 
   setLoading(true);
   setError("");
 
   try {
     const [statsResponse, contributionsResponse] = await Promise.all([
-      server(`/api/creator/stats/${email}`),
-      server(`/api/creator/pending-contributions/${email}`),
+      server(`/api/creator/stats`),
+      server(`/api/creator/pending-contributions`),
     ]);
 
     const statsPayload = statsResponse?.stats || statsResponse || {};
@@ -107,9 +103,7 @@ const loadDashboard = useCallback(async () => {
       contributionsResponse?.pendingContributions ||
       [];
 
-    setContributions(
-      Array.isArray(pendingList) ? pendingList : [],
-    );
+    setContributions(Array.isArray(pendingList) ? pendingList : []);
   } catch (err) {
     console.error("Creator dashboard error:", err);
     setError(err.message || "Failed to load your dashboard.");

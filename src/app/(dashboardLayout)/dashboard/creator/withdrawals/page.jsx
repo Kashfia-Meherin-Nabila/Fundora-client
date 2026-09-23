@@ -9,6 +9,7 @@ import {
   Check,
 } from "@gravity-ui/icons";
 import toast from "react-hot-toast";
+import { getUserToken } from "@/lib/core/session";
 
 const API_URL = "http://localhost:5000";
 
@@ -95,11 +96,18 @@ export default function WithdrawalsPage() {
 
     const fetchRaisedCredits = async () => {
       try {
-        const response = await fetch(
-          `${API_URL}/api/creator/raised-credits/${encodeURIComponent(
-            session.user.email
-          )}`
-        );
+         const token = await getUserToken();
+
+        if (!token) {
+          throw new Error("Missing auth token.");
+        }
+
+        const response = await fetch(`${API_URL}/api/creator/raised-credits`, {
+          headers: {
+            "content-type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!response.ok) {
           throw new Error(
@@ -158,148 +166,85 @@ export default function WithdrawalsPage() {
   // SUBMIT WITHDRAWAL
   // ===============================
 
-  const handleSubmit = async (e) => {
+   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!user) {
-      toast.error(
-        "Creator information not available."
-      );
+      toast.error("Creator information not available.");
       return;
     }
-
     if (!canWithdraw) {
-      toast.error(
-        "You need at least 200 credits to withdraw."
-      );
+      toast.error("You need at least 200 credits to withdraw.");
       return;
     }
-
     if (!validAmount) {
-      toast.error(
-        "Withdrawal credits must be at least 200 and a multiple of 20."
-      );
+      toast.error("Withdrawal credits must be at least 200 and a multiple of 20.");
       return;
     }
-
     if (!paymentSystem) {
-      toast.error(
-        "Please select a payment system."
-      );
+      toast.error("Please select a payment system.");
       return;
     }
-
     if (!accountNumber.trim()) {
-      toast.error(
-        "Please enter your account number."
-      );
+      toast.error("Please enter your account number.");
       return;
     }
 
     try {
       setSubmitting(true);
 
-      // ===============================
-      // WITHDRAWAL DATA
-      // ===============================
+      const token = await getUserToken();
+
+      if (!token) {
+        throw new Error("Missing auth token.");
+      }
 
       const withdrawalData = {
-        creator_email: user.email,
-        creator_name: user.name,
-
-        withdrawal_credit:
-          withdrawCredits,
-
-        payment_system:
-          paymentSystem,
-
-        account_number:
-          accountNumber.trim(),
-
+        withdrawal_credit: withdrawCredits,
+        payment_system: paymentSystem,
+        account_number: accountNumber.trim(),
         withdraw_date: new Date(),
       };
 
-      // ===============================
-      // SEND REQUEST
-      // ===============================
-
-      const response = await fetch(
-        `${API_URL}/api/withdrawals`,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify(
-            withdrawalData
-          ),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/withdrawals`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(withdrawalData),
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.message ||
-            "Withdrawal request failed."
-        );
+        throw new Error(data.message || "Withdrawal request failed.");
       }
 
-      // ===============================
-      // SUCCESS
-      // ===============================
-
-      toast.success(
-        "Withdrawal request submitted successfully!"
-      );
-
-      // ===============================
-      // RESET FORM
-      // ===============================
+      toast.success("Withdrawal request submitted successfully!");
 
       setCreditsToWithdraw("");
       setPaymentSystem("");
       setAccountNumber("");
 
-      // ===============================
-      // REFRESH RAISED CREDITS
-      // ===============================
-
-      const raisedResponse =
-        await fetch(
-          `${API_URL}/api/creator/raised-credits/${encodeURIComponent(
-            user.email
-          )}`
-        );
+      const raisedResponse = await fetch(`${API_URL}/api/creator/raised-credits`, {
+        headers: {
+          "content-type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (raisedResponse.ok) {
-        const raisedData =
-          await raisedResponse.json();
-
-        setRaisedCredits(
-          Number(
-            raisedData.totalRaisedCredits
-          ) || 0
-        );
+        const raisedData = await raisedResponse.json();
+        setRaisedCredits(Number(raisedData.totalRaisedCredits) || 0);
       }
     } catch (error) {
-      console.error(
-        "Withdrawal error:",
-        error
-      );
-
-      toast.error(
-        error.message ||
-          "Failed to submit withdrawal."
-      );
+      console.error("Withdrawal error:", error);
+      toast.error(error.message || "Failed to submit withdrawal.");
     } finally {
       setSubmitting(false);
     }
   };
-
   // ===============================
   // LOADING
   // ===============================
@@ -311,7 +256,7 @@ export default function WithdrawalsPage() {
     return (
       <div className="min-h-screen bg-slate-950 p-6">
         <div className="mx-auto max-w-6xl">
-          <div className="flex min-h-[500px] items-center justify-center">
+          <div className="flex min-h-125 items-center justify-center">
             <p className="text-slate-400">
               Loading withdrawal information...
             </p>
@@ -699,7 +644,7 @@ export default function WithdrawalsPage() {
                   submitting ||
                   !validAmount
                 }
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-3.5 font-semibold text-white shadow-lg shadow-violet-600/10 transition hover:from-violet-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-purple-600 px-5 py-3.5 font-semibold text-white shadow-lg shadow-violet-600/10 transition hover:from-violet-500 hover:to-purple-500 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Wallet
                   width={19}

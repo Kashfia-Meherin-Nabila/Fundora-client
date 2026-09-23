@@ -215,7 +215,7 @@ const MyCampaigns = () => {
                 >
                   <td className="py-4">
                     <div className="flex items-center gap-4">
-                      <div className="h-16 w-20 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-slate-800">
+                      <div className="relative h-16 w-20 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-slate-800">
                         {campaign.campaign_image_url ? (
                           <Image
                             src={campaign.campaign_image_url}
